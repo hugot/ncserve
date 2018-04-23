@@ -1,0 +1,28 @@
+#!/bin/bash
+##
+# small frontend to the ncserve lib.
+
+if [[ -z $BASHER_ROOT ]]; then
+    if [[ -d "$HOME"/.basher ]]; then
+        BASHER_ROOT="$HOME/.basher"
+    else
+        echo 'This script depends on the basher package manager, which could not be found in your environment.' >&2
+
+        exit 1
+    fi
+fi
+
+source "$BASHER_ROOT/lib/include.bash"
+
+include hugot/ncserve lib/ncserve/ncserve.bash
+
+case "$1" in
+    static)
+        # TODO: implement a static fileserver.
+        route() {
+            return 1
+        }
+        
+        startServer "$2"
+        ;;
+esac

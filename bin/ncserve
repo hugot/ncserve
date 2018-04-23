@@ -14,7 +14,7 @@ fi
 
 source "$BASHER_ROOT/lib/include.bash"
 
-include hugot/ncserve lib/ncserve/ncserve.bash
+include hugot/ncserve lib/ncserve.bash
 
 case "$1" in
     static)

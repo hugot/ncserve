@@ -1,7 +1,5 @@
 #!/bin/bash
 
-mkfifo server_fifo
-trap 'rm server_fifo' EXIT
 
 handleRequest() {
     while true; do
@@ -103,7 +101,11 @@ startServer() {
 
     declare port="$1"
 
+    mkfifo server_fifo
+    trap 'rm server_fifo' EXIT
+
     info 'Starting server on port '"$port"
+
     # shellcheck disable=SC2094
     while true; do
         netcat -l -p "$port" -k < server_fifo | handleRequest | tee server_fifo

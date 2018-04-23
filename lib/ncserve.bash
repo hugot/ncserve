@@ -2,9 +2,11 @@
 
 
 handleRequest() {
-    while true; do
+    while read -r http_version; do
+        info "read $http_version"
+        [[ -z $http_version ]] && continue
+
         declare -A HEADERS=()
-        read -r http_version
         
         echo 'HTTP VERSION: '"$http_version" >&2
 
@@ -108,7 +110,7 @@ startServer() {
 
     # shellcheck disable=SC2094
     while true; do
-        netcat -l -p "$port" -k < server_fifo | handleRequest | tee server_fifo
+        netcat -l -p "$port" < server_fifo | handleRequest | tee server_fifo
     done
 }
 

@@ -110,7 +110,7 @@ startServer() {
 
     # shellcheck disable=SC2094
     while true; do
-        netcat -l -p "$port" < server_fifo | handleRequest | tee server_fifo
+        netcat -w 1 -k -l -p "$port" < server_fifo | handleRequest | tee server_fifo
     done
 }
 

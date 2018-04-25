@@ -3,12 +3,11 @@
 
 handleRequest() {
     while read -r http_version; do
-        info "read $http_version"
         [[ -z $http_version ]] && continue
 
         declare -A HEADERS=()
         
-        echo 'HTTP VERSION: '"$http_version" >&2
+        info "$http_version" >&2
 
         read -ra version_arr <<<"$http_version"
         declare http_method="${version_arr[0]}"
@@ -24,21 +23,21 @@ handleRequest() {
 
         while read -r line; do
             [[ ${#line} -eq 1 ]] && break
-            echo "Header line: $line" >&2
+            debug "Header line: $line" >&2
             declare header_name="${line%%:*}"
             declare header_val="${line#*:}"
-            echo 'Header name: '"$header_name" >&2
-            echo 'Header val: '"$header_val" >&2
+            debug 'Header name: '"$header_name" >&2
+            debug 'Header val: '"$header_val" >&2
             HEADERS[$header_name]="$header_val"
         done
 
-        echo '===== Handling:' >&2
+        debug '===== Handling:' >&2
         for header in "${!HEADERS[@]}"; do
-            echo 'HEADER => '"$header"': '"${HEADERS[$header]}" >&2
+            debug 'HEADER => '"$header"': '"${HEADERS[$header]}" >&2
         done
         
         declare route="${version_arr[1]}"
-        echo "ROUTE => $route" >&2
+        debug "ROUTE => $route" >&2
 
         (route "$route" || respond -S 404 -C 'The requested resource was not found')
     done
@@ -90,6 +89,8 @@ respond() {
 }
 
 startServer() {
+    declare -i INFO=1
+
     if ! declare -f route &>>/dev/null; then
         echo 'No route function defined, not starting server.' >&2
 
@@ -98,6 +99,7 @@ startServer() {
 
     if ! which netcat &>>/dev/null; then
         echo "This script is dependent on netcat, can't start server" >&2
+
         return 1
     fi
 
@@ -110,10 +112,38 @@ startServer() {
 
     # shellcheck disable=SC2094
     while true; do
-        netcat -w 1 -k -l -p "$port" < server_fifo | handleRequest | tee server_fifo
+        netcat --w 1 -k l -p "$port" < server_fifo \
+            | handleRequest \
+            | { if [[ $DEBUG -ge 1 ]]; then tee server_fifo; else cat > server_fifo; fi; }
     done
 }
 
+debug() {
+    if [[ $DEBUG -ge 1 ]]; then
+        echo "[DEBUG] => $1" >&2
+    fi
+}
+
+# shellcheck disable=SC2059
+debugf() {
+    if [[ $DEBUG -ge 1 ]]; then
+        declare format_string="$1"
+        shift
+        printf "[DEBUG] => $format_string" "$@" >&2
+    fi
+}
+
 info() {
-    echo "$1" >&2
+    if [[ $INFO -eq 1 ]]; then
+        echo "[INFO] => $1" >&2
+    fi
+}
+
+# shellcheck disable=SC2059
+infof() {
+    if [[ $INFO -eq 1 ]]; then
+        declare format_string="$1"
+        shift
+        printf "[INFO] => $format_string" "$@" >&2
+    fi
 }

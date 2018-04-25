@@ -112,7 +112,7 @@ startServer() {
 
     # shellcheck disable=SC2094
     while true; do
-        netcat -w 1 -k -l -p "$port" < server_fifo \
+        netcat -k -l -p "$port" < server_fifo \
             | handleRequest \
             | { if [[ $DEBUG -ge 1 ]]; then tee server_fifo; else cat > server_fifo; fi; }
     done
